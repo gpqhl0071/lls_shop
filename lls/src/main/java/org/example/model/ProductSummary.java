@@ -13,12 +13,13 @@ public class ProductSummary {
     private int vipLevel;
     private long killScore;
     private String name; // 新增字段
+    private String avatarUrl; // 新增字段
 
     // 构造函数
     public ProductSummary() {}
 
     public ProductSummary(String flagId, BigDecimal amount, String publishTime, String introduction, int favoriteCount,
-                          int serverId, long combatPower, int vipLevel, long killScore, String name) {
+                          int serverId, long combatPower, int vipLevel, long killScore, String name, String avatarUrl) {
         this.flagId = flagId;
         this.amount = amount;
         this.publishTime = publishTime;
@@ -29,6 +30,7 @@ public class ProductSummary {
         this.vipLevel = vipLevel;
         this.killScore = killScore;
         this.name = name;
+        this.avatarUrl = avatarUrl; // 初始化头像URL
     }
 
     // Getters and Setters
@@ -112,6 +114,14 @@ public class ProductSummary {
         this.name = name;
     }
 
+    public String getAvatarUrl() {
+        return avatarUrl; // 新增getter方法
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl; // 新增setter方法
+    }
+
     @Override
     public String toString() {
         return "ProductSummary{" +
@@ -125,6 +135,7 @@ public class ProductSummary {
                 ", vipLevel=" + vipLevel +
                 ", killScore=" + killScore +
                 ", name='" + name + '\'' +
+                ", avatarUrl='" + avatarUrl + '\'' + // 新增字段
                 '}';
     }
 }

@@ -18,9 +18,20 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter")
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-mail")
+    
+    // 添加Redis依赖
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("redis.clients:jedis")
+    
+    // 添加Jackson依赖
+    implementation("com.fasterxml.jackson.core:jackson-databind")
+    
+    // 添加Jackson JSR310模块
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
+    
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
 tasks.withType<KotlinCompile> {
@@ -33,6 +44,7 @@ tasks.withType<KotlinCompile> {
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+
 tasks.bootJar {
     archiveFileName.set("lls.jar")
     mainClass.set("org.example.Main") // 替换为你的主类

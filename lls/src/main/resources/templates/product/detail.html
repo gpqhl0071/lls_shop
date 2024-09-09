@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Product Detail</title>
+</head>
+<body>
+    <!-- ... 现有代码 ... -->
+
+    <h2>价格变化记录</h2>
+    <table>
+        <tr>
+            <th>变化前</th>
+            <th>变化后</th>
+            <th>变化时间</th>
+        </tr>
+        <tr th:each="change : ${product.priceHistory}">
+            <td th:text="${change.oldPrice}"></td>
+            <td><strong style="color: red;" th:text="${change.newPrice}"></strong></td>
+            <td th:text="${#temporals.format(change.timestamp, 'yyyy-MM-dd HH:mm:ss')}"></td>
+        </tr>
+    </table>
+
+    <!-- ... 现有代码 ... -->
+</body>
+</html>
