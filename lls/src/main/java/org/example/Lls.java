@@ -151,7 +151,7 @@ public class Lls {
       emailContent.append("觉醒英雄: ").append(joinStrings(awakedHeroes, ", ")).append("<br>");
 
       // 添加产品详情页链接
-      String productUrl = String.format("https://trade.lilith.com/detail/%s", flagId);
+      String productUrl = String.format("https://rok.trade.lilith.com/detail/%s", flagId);
       emailContent.append(String.format("<a href='%s'>查看详情</a><br>", productUrl));
 
       emailContent.append("</td></tr>");

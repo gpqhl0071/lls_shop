@@ -37,7 +37,7 @@ public class ProductController {
     }
 
     @GetMapping(path = "/html", produces = MediaType.TEXT_HTML_VALUE)
-    public String getProductsHtml(@RequestParam(defaultValue = "0") int status) {
+    public String getProductsHtml(@RequestParam(defaultValue = "2") int status) {
         List<ProductSummary> products = productService.getProductSummariesByStatus(status);
         return generateHtmlReport(products, status);
     }
@@ -100,8 +100,8 @@ public class ProductController {
             .append("<th>玩家名称</th>")
             .append("<th>当前价格</th>")
             .append("<th>原价</th>")
-            .append("<th class='sort-btn' onclick='sortTable(5)'>开售时间 ▲▼</th>")
-            .append("<th>倒计时</th>")
+            .append("<th class='sort-btn' onclick='sortTable(7)'>开售时间 ▲▼</th>")
+            .append("<th class='sort-btn' onclick='sortTable(8)'>倒计时 ▲▼</th>") // 添加排序按钮到倒计时列
             .append("<th>收藏数</th>")
             .append("<th>击杀积分</th>")
             .append("<th>操作</th>")
@@ -135,10 +135,10 @@ public class ProductController {
                     .append("<td>").append(String.format("%.2f", originalPrice)).append("元</td>")
                     .append("<td data-sort='").append(saleTimeStr).append("'>")
                     .append(saleTime.format(formatter)).append("</td>")
-                    .append("<td class='countdown' data-saletime='").append(saleTimeStr).append("'></td>")
+                    .append("<td class='countdown' data-saletime='").append(saleTimeStr).append("' data-countdown=''></td>") // 添加 data-countdown 属性
                     .append("<td").append(favoriteCountStyle).append(">").append(product.getFavoriteCount()).append("</td>")
                     .append("<td>").append(product.getKillScore()).append("</td>")
-                    .append("<td><a href='https://trade.lilith.com/detail/").append(product.getFlagId()).append("' target='_blank'>查看详情</a></td>")
+                    .append("<td><a href='https://rok.trade.lilith.com/detail/").append(product.getFlagId()).append("' target='_blank'>查看详情</a></td>")
                     .append("</tr>");
             } catch (Exception e) {
                 logger.error("处理产品时发生错误: " + product.getFlagId(), e);
@@ -200,15 +200,45 @@ public class ProductController {
             .append("      shouldSwitch = false;")
             .append("      x = rows[i].getElementsByTagName('TD')[n];")
             .append("      y = rows[i + 1].getElementsByTagName('TD')[n];")
-            .append("      if (dir == 'asc') {")
-            .append("        if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {")
-            .append("          shouldSwitch = true;")
-            .append("          break;")
+            .append("      if (n === 7) {") // 开售时间列
+            .append("        var xTime = new Date(x.getAttribute('data-sort')).getTime();")
+            .append("        var yTime = new Date(y.getAttribute('data-sort')).getTime();")
+            .append("        if (dir == 'asc') {")
+            .append("          if (xTime > yTime) {")
+            .append("            shouldSwitch = true;")
+            .append("            break;")
+            .append("          }")
+            .append("        } else if (dir == 'desc') {")
+            .append("          if (xTime < yTime) {")
+            .append("            shouldSwitch = true;")
+            .append("            break;")
+            .append("          }")
             .append("        }")
-            .append("      } else if (dir == 'desc') {")
-            .append("        if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {")
-            .append("          shouldSwitch = true;")
-            .append("          break;")
+            .append("      } else if (n === 8) {") // 倒计时列
+            .append("        var xCountdown = parseInt(x.getAttribute('data-countdown')) || 0;")
+            .append("        var yCountdown = parseInt(y.getAttribute('data-countdown')) || 0;")
+            .append("        if (dir == 'asc') {")
+            .append("          if (xCountdown > yCountdown) {")
+            .append("            shouldSwitch = true;")
+            .append("            break;")
+            .append("          }")
+            .append("        } else if (dir == 'desc') {")
+            .append("          if (xCountdown < yCountdown) {")
+            .append("            shouldSwitch = true;")
+            .append("            break;")
+            .append("          }")
+            .append("        }")
+            .append("      } else {")
+            .append("        if (dir == 'asc') {")
+            .append("          if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {")
+            .append("            shouldSwitch = true;")
+            .append("            break;")
+            .append("          }")
+            .append("        } else if (dir == 'desc') {")
+            .append("          if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {")
+            .append("            shouldSwitch = true;")
+            .append("            break;")
+            .append("          }")
             .append("        }")
             .append("      }")
             .append("    }")
@@ -232,6 +262,7 @@ public class ProductController {
             .append("    var distance = saleTime - now;")
             .append("    if (distance < 0) {")
             .append("      countdowns[i].innerHTML = '已开售';")
+            .append("      countdowns[i].setAttribute('data-countdown', '0');")
             .append("    } else {")
             .append("      var days = Math.floor(distance / (1000 * 60 * 60 * 24));")
             .append("      var hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));")
@@ -241,6 +272,7 @@ public class ProductController {
             .append("        String(hours).padStart(2, '0') + ':' + ")
             .append("        String(minutes).padStart(2, '0') + ':' + ")
             .append("        String(seconds).padStart(2, '0');")
+            .append("      countdowns[i].setAttribute('data-countdown', distance);")
             .append("    }")
             .append("  }")
             .append("}")

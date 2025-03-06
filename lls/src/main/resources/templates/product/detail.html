@@ -2,24 +2,259 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Product Detail</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 引入Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- 引入自定义CSS -->
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <!-- 引入Font Awesome图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <!-- ... 现有代码 ... -->
+    <div class="container py-4">
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">首页</a></li>
+                <li class="breadcrumb-item"><a href="/products">产品列表</a></li>
+                <li class="breadcrumb-item active" aria-current="page" th:text="${product.name}">产品详情</li>
+            </ol>
+        </nav>
 
-    <h2>价格变化记录</h2>
-    <table>
-        <tr>
-            <th>变化前</th>
-            <th>变化后</th>
-            <th>变化时间</th>
-        </tr>
-        <tr th:each="change : ${product.priceHistory}">
-            <td th:text="${change.oldPrice}"></td>
-            <td><strong style="color: red;" th:text="${change.newPrice}"></strong></td>
-            <td th:text="${#temporals.format(change.timestamp, 'yyyy-MM-dd HH:mm:ss')}"></td>
-        </tr>
-    </table>
+        <div class="row">
+            <!-- 产品图片 -->
+            <div class="col-md-5 mb-4">
+                <div class="product-image-container shadow-sm rounded">
+                    <img th:if="${product.imageUrl}" th:src="${product.imageUrl}" class="img-fluid rounded product-image" th:alt="${product.name}" loading="lazy">
+                    <img th:unless="${product.imageUrl}" src="/images/default-product.jpg" class="img-fluid rounded product-image" alt="默认产品图片">
+                </div>
+            </div>
 
-    <!-- ... 现有代码 ... -->
+            <!-- 产品信息 -->
+            <div class="col-md-7">
+                <h1 class="product-title display-6 mb-3" th:text="${product.name}">产品名称</h1>
+                
+                <div class="price-container mb-4">
+                    <span class="current-price fs-2 fw-bold text-danger" th:text="${'¥' + product.price}">¥0.00</span>
+                    <span th:if="${product.originalPrice}" class="original-price text-decoration-line-through ms-2 text-muted" 
+                          th:text="${'¥' + product.originalPrice}">¥0.00</span>
+                    <span th:if="${product.discount}" class="discount-badge ms-2 badge bg-danger" 
+                          th:text="${product.discount + '% OFF'}">20% OFF</span>
+                </div>
+                
+                <div class="product-details mb-4">
+                    <table class="table table-striped">
+                        <tbody>
+                            <tr>
+                                <th>产品编号</th>
+                                <td th:text="${product.id}">ID001</td>
+                            </tr>
+                            <tr th:if="${product.category}">
+                                <th>分类</th>
+                                <td th:text="${product.category}">分类</td>
+                            </tr>
+                            <tr th:if="${product.brand}">
+                                <th>品牌</th>
+                                <td th:text="${product.brand}">品牌</td>
+                            </tr>
+                            <tr th:if="${product.stock}">
+                                <th>库存</th>
+                                <td th:text="${product.stock}">100</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="actions mb-4">
+                    <button class="btn btn-primary btn-lg me-2">
+                        <i class="fas fa-shopping-cart me-2"></i>加入购物车
+                    </button>
+                    <button class="btn btn-outline-danger btn-lg">
+                        <i class="fas fa-heart me-2"></i>收藏
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 产品描述和规格 -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <ul class="nav nav-tabs mb-4" id="productTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="description-tab" data-bs-toggle="tab" 
+                                data-bs-target="#description" type="button" role="tab" 
+                                aria-controls="description" aria-selected="true">产品描述</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="specs-tab" data-bs-toggle="tab" 
+                                data-bs-target="#specs" type="button" role="tab" 
+                                aria-controls="specs" aria-selected="false">规格参数</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="priceHistory-tab" data-bs-toggle="tab" 
+                                data-bs-target="#priceHistory" type="button" role="tab" 
+                                aria-controls="priceHistory" aria-selected="false">价格变化</button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content p-3 border border-top-0 rounded-bottom" id="productTabsContent">
+                    <!-- 产品描述 -->
+                    <div class="tab-pane fade show active" id="description" role="tabpanel" aria-labelledby="description-tab">
+                        <div class="product-description" th:utext="${product.description}">
+                            <p>这里是产品描述内容...</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 规格参数 -->
+                    <div class="tab-pane fade" id="specs" role="tabpanel" aria-labelledby="specs-tab">
+                        <div class="specifications" th:if="${product.specifications}">
+                            <table class="table table-hover">
+                                <tbody>
+                                    <tr th:each="spec : ${product.specifications}">
+                                        <th th:text="${spec.name}">规格名</th>
+                                        <td th:text="${spec.value}">规格值</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div th:unless="${product.specifications}" class="alert alert-info">
+                            暂无规格参数信息
+                        </div>
+                    </div>
+                    
+                    <!-- 价格变化记录 -->
+                    <div class="tab-pane fade" id="priceHistory" role="tabpanel" aria-labelledby="priceHistory-tab">
+                        <div class="price-history" th:if="${product.priceHistory != null and !product.priceHistory.empty}">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>变化前</th>
+                                        <th>变化后</th>
+                                        <th>变化时间</th>
+                                        <th>价格变化</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="change : ${product.priceHistory}">
+                                        <td th:text="${'¥' + change.oldPrice}">¥0.00</td>
+                                        <td>
+                                            <strong class="text-danger" th:text="${'¥' + change.newPrice}">¥0.00</strong>
+                                        </td>
+                                        <td th:text="${#temporals.format(change.timestamp, 'yyyy-MM-dd HH:mm:ss')}">2023-01-01 12:00:00</td>
+                                        <td>
+                                            <span th:if="${change.newPrice > change.oldPrice}" class="text-danger">
+                                                <i class="fas fa-arrow-up"></i>
+                                                <span th:text="${'涨 ' + #numbers.formatDecimal(change.newPrice - change.oldPrice, 1, 2) + ' 元'}">涨 0.00 元</span>
+                                            </span>
+                                            <span th:if="${change.newPrice < change.oldPrice}" class="text-success">
+                                                <i class="fas fa-arrow-down"></i>
+                                                <span th:text="${'降 ' + #numbers.formatDecimal(change.oldPrice - change.newPrice, 1, 2) + ' 元'}">降 0.00 元</span>
+                                            </span>
+                                            <span th:if="${change.newPrice == change.oldPrice}" class="text-muted">
+                                                <i class="fas fa-equals"></i> 无变化
+                                            </span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <!-- 价格变化趋势图 -->
+                            <div class="price-chart mt-4">
+                                <h4>价格变化趋势</h4>
+                                <canvas id="priceChart" height="250"></canvas>
+                            </div>
+                        </div>
+                        <div th:unless="${product.priceHistory != null and !product.priceHistory.empty}" class="alert alert-info">
+                            暂无价格变化记录
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 相关推荐 -->
+        <div class="related-products mt-5" th:if="${relatedProducts != null and !relatedProducts.empty}">
+            <h3 class="mb-4">相关推荐</h3>
+            <div class="row row-cols-2 row-cols-md-4 row-cols-lg-5 g-4">
+                <div class="col" th:each="related : ${relatedProducts}">
+                    <div class="card h-100 product-card">
+                        <a th:href="@{'/product/' + ${related.id}}">
+                            <img th:src="${related.imageUrl}" class="card-img-top" th:alt="${related.name}" loading="lazy">
+                        </a>
+                        <div class="card-body">
+                            <h5 class="card-title product-name" th:text="${related.name}">相关产品</h5>
+                            <p class="card-text text-danger fw-bold" th:text="${'¥' + related.price}">¥0.00</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 引入Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <!-- 引入自定义JS -->
+    <script th:src="@{/js/product-detail.js}"></script>
+    
+    <!-- 价格趋势图初始化 -->
+    <script th:inline="javascript">
+    /*<![CDATA[*/
+        document.addEventListener('DOMContentLoaded', function() {
+            const priceHistory = /*[[${product.priceHistory}]]*/ [];
+            if (priceHistory && priceHistory.length > 0) {
+                initPriceChart(priceHistory);
+            }
+        });
+
+        function initPriceChart(priceHistory) {
+            const labels = priceHistory.map(item => {
+                const date = new Date(item.timestamp);
+                return date.toLocaleDateString('zh-CN');
+            });
+            
+            const prices = priceHistory.map(item => item.newPrice);
+            
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '价格 (¥)',
+                        data: prices,
+                        borderColor: 'rgb(255, 99, 132)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        tension: 0.1,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `¥${context.raw}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false,
+                            ticks: {
+                                callback: function(value) {
+                                    return '¥' + value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    /*]]>*/
+    </script>
 </body>
 </html>

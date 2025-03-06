@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>商品列表</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 引入Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- 引入自定义CSS -->
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <!-- 引入Font Awesome图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header class="bg-primary text-white py-3 shadow-sm">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <h1 class="mb-0 h3">商品交易平台</h1>
+                <div>
+                    <a href="#" class="btn btn-outline-light btn-sm"><i class="fas fa-user me-1"></i> 登录</a>
+                    <a href="#" class="btn btn-light btn-sm ms-2"><i class="fas fa-star me-1"></i> 我的收藏</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container py-4">
+        <!-- 面包屑导航 -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/"><i class="fas fa-home"></i> 首页</a></li>
+                <li class="breadcrumb-item active">商品列表</li>
+            </ol>
+        </nav>
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0"><i class="fas fa-shopping-cart text-primary me-2"></i>商品列表</h2>
+            <span class="badge bg-primary rounded-pill">总商品数: <span th:text="${products.size()}">209</span></span>
+        </div>
+        
+        <!-- 筛选和搜索区域 -->
+        <div class="card mb-4 border-0 shadow-sm">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-6 mb-3 mb-lg-0">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-primary"></i></span>
+                            <input 
+                                type="search" 
+                                id="searchInput" 
+                                class="form-control border-start-0" 
+                                placeholder="搜索商品名称、服务器ID、战力等..."
+                                aria-label="搜索商品" 
+                                data-table="productTable">
+                            <button class="btn btn-primary" type="button" onclick="document.getElementById('searchInput').value=''; searchTable('', 'productTable')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div id="searchResults" class="small text-primary mt-2" style="display: none;"></div>
+                    </div>
+                    <div class="col-lg-6">
+                        <form id="filterForm" action="/products" method="get">
+                            <input type="hidden" name="page" value="0">
+                            <input type="hidden" name="size" th:value="${size}">
+                            <div class="d-flex gap-3 flex-wrap justify-content-lg-end">
+                                <div class="input-group" style="max-width: 180px;">
+                                    <label class="input-group-text bg-white" for="statusFilter">
+                                        <i class="fas fa-filter text-primary me-1"></i> 状态
+                                    </label>
+                                    <select class="form-select" id="statusFilter" name="status">
+                                        <option value="-1">全部</option>
+                                        <option value="0" th:selected="${status == 0}">在售</option>
+                                        <option value="1" th:selected="${status == 1}">售罄</option>
+                                        <option value="2" th:selected="${status == 2}">未开售</option>
+                                        <option value="3" th:selected="${status == 3}">已售出</option>
+                                    </select>
+                                </div>
+                                <div class="input-group" style="max-width: 180px;">
+                                    <label class="input-group-text bg-white" for="serverIdFilter">
+                                        <i class="fas fa-server text-primary me-1"></i> 服务器
+                                    </label>
+                                    <select class="form-select" id="serverIdFilter" name="serverId">
+                                        <option value="">全部</option>
+                                        <option th:each="server : ${servers}" th:value="${server}" th:text="${server}"></option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-search me-1"></i> 筛选
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主要内容区域 -->
+        <div class="row">
+            <!-- 左侧商品表格 -->
+            <div class="col-lg-9">
+                <!-- 表格区域 -->
+                <div class="table-container mb-4">
+                    <table class="table table-hover table-sm" id="productTable" data-resizable-columns style="font-size: 0.9rem;">
+                        <thead class="table-light">
+                            <tr class="align-middle">
+                                <th scope="col" data-sort="avatar">
+                                    <span class="d-flex align-items-center">
+                                        <span class="me-2">头像</span>
+                                    </span>
+                                </th>
+                                <th scope="col" data-sort="serverId">
+                                    <span class="d-flex align-items-center">
+                                        <span class="me-2">服务器ID</span>
+                                    </span>
+                                </th>
+                                <th scope="col" data-sort="combatPower">
+                                    <span class="d-flex align-items-center">
+                                        <span class="me-2">战力</span>
+                                    </span>
+                                </th>
+                                <th scope="col" data-sort="vipLevel">
+                                    <span class="d-flex align-items-center">
+                                        <span class="me-2">VIP等级</span>
+                                    </span>
+                                </th>
+                                <th scope="col" data-sort="name">
+                                    <span class="d-flex align-items-center">
+                                        <span class="me-2">玩家名称</span>
+                                    </span>
+                                </th>
+                                <th scope="col" data-sort="price">
+                                    <span class="d-flex align-items-center">
+                                        <span class="me-2">当前价格</span>
+                                        <a href="#" onclick="sortByPrice(); return false;" class="text-decoration-none text-dark">
+                                            <i th:class="${sortField == 'price' ? (sortDirection == 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down') : 'fas fa-sort'}" class="ms-auto"></i>
+                                        </a>
+                                    </span>
+                                </th>
+                                <th scope="col" data-sort="originalPrice">
+                                    <span class="d-flex align-items-center">
+                                        <span class="me-2">原价</span>
+                                    </span>
+                                </th>
+                                <th scope="col" data-sort="saleTime">
+                                    <span class="d-flex align-items-center">
+                                        <span class="me-2">开售时间</span>
+                                        <a href="#" onclick="sortBySaleTime(); return false;" class="text-decoration-none text-dark">
+                                            <i th:class="${sortField == 'saleTime' ? (sortDirection == 'asc' ? 'fas fa-sort-up' : 'fas fa-sort-down') : 'fas fa-sort'}" class="ms-auto"></i>
+                                        </a>
+                                    </span>
+                                </th>
+                                <th scope="col" data-sort="countdown">
+                                    <span class="d-flex align-items-center">
+                                        <span class="me-2">倒计时</span>
+                                    </span>
+                                </th>
+                                <th scope="col" data-sort="favoriteCount">
+                                    <span class="d-flex align-items-center">
+                                        <span class="me-2">收藏数</span>
+                                    </span>
+                                </th>
+                                <th scope="col">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="product : ${products}" class="product-row align-middle">
+                                <td>
+                                    <img 
+                                        th:src="${product.avatarUrl != null ? product.avatarUrl : '/images/default-avatar.png'}" 
+                                        alt="头像" 
+                                        class="rounded-circle shadow-sm border"
+                                        width="40" 
+                                        height="40" 
+                                        loading="lazy"
+                                        onerror="this.src='/images/default-avatar.png'">
+                                </td>
+                                <td data-sort="${product.serverId}" class="text-nowrap">
+                                    <span class="badge bg-secondary" th:text="${product.serverId}">服务器ID</span>
+                                </td>
+                                <td data-sort="${product.combatPower}" class="text-nowrap">
+                                    <span class="fw-bold" th:text="${#numbers.formatInteger(product.combatPower, 1, 'COMMA')}">0</span>
+                                </td>
+                                <td data-sort="${product.vipLevel}" class="text-nowrap">
+                                    <span class="badge bg-warning text-dark" th:if="${product.vipLevel > 10}">VIP</span>
+                                    <span th:text="${product.vipLevel}">0</span>
+                                </td>
+                                <td data-sort="${product.name}" class="text-nowrap">
+                                    <div class="d-flex align-items-center">
+                                        <span class="text-truncate" style="max-width: 150px;" th:text="${product.name}">产品名称</span>
+                                    </div>
+                                </td>
+                                <td data-sort="${product.amount}" class="text-nowrap">
+                                    <span 
+                                        th:class="${product.amount != product.amount ? 'text-danger fw-bold' : ''}" 
+                                        th:text="${#numbers.formatDecimal(product.amount, 1, 2) + '元'}">
+                                        0.00元
+                                    </span>
+                                </td>
+                                <td data-sort="${product.amount}" th:text="${#numbers.formatDecimal(product.amount, 1, 2) + '元'}" class="text-nowrap">0.00元</td>
+                                <td 
+                                    th:text="${#temporals.format(saleTimes[product.flagId], 'yyyy-MM-dd HH:mm:ss')}"
+                                    th:data-sort="${saleTimes[product.flagId]}"
+                                    class="text-nowrap">
+                                    2023-01-01 12:00:00
+                                </td>
+                                <td 
+                                    class="countdown text-nowrap" 
+                                    th:data-saletime="${saleTimes[product.flagId]}" 
+                                    data-countdown="">
+                                    计算中...
+                                </td>
+                                <td data-sort="${product.favoriteCount}" class="text-nowrap">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-heart text-danger me-1"></i>
+                                        <span 
+                                            th:text="${product.favoriteCount}" 
+                                            th:class="${product.favoriteCount > 10 ? 'text-danger fw-bold' : ''}">0</span>
+                                    </div>
+                                </td>
+                                <td class="text-nowrap">
+                                    <a th:href="${'https://rok.trade.lilith.com/detail/' + product.flagId}" target="_blank" class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="官网查看">
+                                        <i class="fas fa-external-link-alt"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <!-- 无数据提示 -->
+                            <tr th:if="${products.empty}">
+                                <td colspan="11" class="text-center py-5">
+                                    <div class="py-5">
+                                        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                                        <h4>未找到商品</h4>
+                                        <p class="text-muted">请尝试调整筛选条件</p>
+                                        <button class="btn btn-outline-primary mt-3" onclick="window.location.href='/products'">
+                                            <i class="fas fa-sync-alt me-1"></i> 重置筛选
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 分页控件 -->
+                <div class="d-flex justify-content-between align-items-center flex-wrap bg-light p-3 rounded-3 shadow-sm" th:if="${totalPages > 1}">
+                    <div class="mb-3 mb-md-0">
+                        显示 <span class="badge bg-primary" th:text="${page * size + 1}">1</span> - 
+                        <span class="badge bg-primary" th:text="${(page * size + products.size()) > totalElements ? totalElements : (page * size + products.size())}">10</span> 
+                        共 <span class="badge bg-primary" th:text="${totalElements}">100</span> 项
+                    </div>
+                    
+                    <div class="d-flex align-items-center mb-3 mb-md-0">
+                        <span class="me-2">每页显示:</span>
+                        <div class="btn-group" role="group" aria-label="每页显示数量">
+                            <button th:each="ps : ${#numbers.sequence(10, 50, 10)}" type="button" 
+                                    th:class="${ps == size ? 'btn btn-primary' : 'btn btn-outline-primary'}" 
+                                    th:text="${ps}"
+                                    th:onclick="'changePageSize(' + ${ps} + ')'">
+                                10
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <nav aria-label="商品分页">
+                        <ul class="pagination justify-content-center mb-0">
+                            <li class="page-item" th:classappend="${page == 0 ? 'disabled' : ''}">
+                                <a class="page-link" th:href="@{${'/products'}(page=0, size=${size}, status=${status}, serverId=${serverId}, sort=${sort}, direction=${direction})}" aria-label="首页">
+                                    <span aria-hidden="true">&laquo;&laquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item" th:classappend="${page == 0 ? 'disabled' : ''}">
+                                <a class="page-link" th:href="@{${'/products'}(page=${page - 1}, size=${size}, status=${status}, serverId=${serverId}, sort=${sort}, direction=${direction})}" aria-label="上一页">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item" th:each="i : ${#numbers.sequence(pageStart, pageEnd)}" th:classappend="${i == page ? 'active' : ''}">
+                                <a class="page-link" th:href="@{${'/products'}(page=${i}, size=${size}, status=${status}, serverId=${serverId}, sort=${sort}, direction=${direction})}" th:text="${i + 1}">1</a>
+                            </li>
+                            <li class="page-item" th:classappend="${page == totalPages - 1 ? 'disabled' : ''}">
+                                <a class="page-link" th:href="@{${'/products'}(page=${page + 1}, size=${size}, status=${status}, serverId=${serverId}, sort=${sort}, direction=${direction})}" aria-label="下一页">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item" th:classappend="${page == totalPages - 1 ? 'disabled' : ''}">
+                                <a class="page-link" th:href="@{${'/products'}(page=${totalPages - 1}, size=${size}, status=${status}, serverId=${serverId}, sort=${sort}, direction=${direction})}" aria-label="末页">
+                                    <span aria-hidden="true">&raquo;&raquo;</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            
+            <!-- 右侧精品号推荐区域 -->
+            <div class="col-lg-3" th:if="${!premiumProducts.empty}">
+                <div class="card shadow-sm border-0 mb-4 sticky-top" style="top: 20px; z-index: 10;">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-crown me-2"></i>精品推荐
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <p class="text-muted small p-3 mb-0">价格低于500元且收藏数大于10的精品号</p>
+                        <div class="list-group list-group-flush">
+                            <a th:each="premium : ${premiumProducts}" 
+                               th:href="${'https://rok.trade.lilith.com/detail/' + premium.flagId}" 
+                               target="_blank"
+                               class="list-group-item list-group-item-action d-flex align-items-center p-2">
+                                <img th:src="${premium.avatarUrl != null ? premium.avatarUrl : '/images/default-avatar.png'}" 
+                                     alt="头像" 
+                                     class="rounded-circle me-2"
+                                     width="40" 
+                                     height="40"
+                                     onerror="this.src='/images/default-avatar.png'">
+                                <div class="flex-grow-1 ms-2">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="fw-bold text-truncate" style="max-width: 130px;" th:text="${premium.name}">玩家名称</span>
+                                        <span class="badge bg-danger ms-1">
+                                            <i class="fas fa-heart me-1"></i>
+                                            <span th:text="${premium.favoriteCount}">12</span>
+                                        </span>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mt-1">
+                                        <span class="badge bg-secondary" th:text="${premium.serverId}">服务器ID</span>
+                                        <span class="text-danger fw-bold" th:text="${#numbers.formatDecimal(premium.amount, 1, 2) + '元'}">199.00元</span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5 class="mb-3">商品交易平台</h5>
+                    <p class="text-muted mb-0">提供安全、便捷的游戏账号交易服务</p>
+                </div>
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <h5 class="mb-3">快速链接</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#" class="text-decoration-none text-muted"><i class="fas fa-home me-2"></i> 首页</a></li>
+                        <li class="mb-2"><a href="#" class="text-decoration-none text-muted"><i class="fas fa-shopping-cart me-2"></i> 商品列表</a></li>
+                        <li class="mb-2"><a href="#" class="text-decoration-none text-muted"><i class="fas fa-heart me-2"></i> 我的收藏</a></li>
+                        <li class="mb-2"><a href="#" class="text-decoration-none text-muted"><i class="fas fa-question-circle me-2"></i> 帮助中心</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h5 class="mb-3">联系我们</h5>
+                    <ul class="list-unstyled text-muted">
+                        <li class="mb-2"><i class="fas fa-envelope me-2"></i> support@example.com</li>
+                        <li class="mb-2"><i class="fas fa-phone me-2"></i> +86 400-123-4567</li>
+                        <li class="mb-2"><i class="fas fa-map-marker-alt me-2"></i> 上海市浦东新区</li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="text-center text-muted">
+                <p class="mb-0">&copy; 2023 商品交易平台 版权所有</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 引入Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 引入自定义JS -->
+    <script th:src="@{/js/table-functions.js}"></script>
+    <script>
+        // 初始化工具提示
+        document.addEventListener('DOMContentLoaded', function() {
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+                new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+            
+            // 初始化倒计时
+            updateCountdowns();
+            setInterval(updateCountdowns, 1000);
+        });
+        
+        // 按开售时间排序
+        function sortBySaleTime() {
+            // 获取当前URL参数
+            const url = new URL(window.location.href);
+            const params = url.searchParams;
+            
+            // 获取当前排序方向，如果不存在或为desc则设为asc，否则设为desc
+            const currentSort = params.get('sort');
+            const currentDir = params.get('direction');
+            
+            // 切换排序方向
+            let newDir;
+            if (currentSort === 'saleTime' && currentDir === 'asc') {
+                newDir = 'desc';
+            } else {
+                newDir = 'asc';
+            }
+            
+            // 设置排序参数
+            params.set('sort', 'saleTime');
+            params.set('direction', newDir);
+            
+            // 重置页码到第一页
+            params.set('page', '0');
+            
+            // 跳转到排序后的URL
+            window.location.href = url.toString();
+        }
+        
+        // 按当前价格排序
+        function sortByPrice() {
+            // 获取当前URL参数
+            const url = new URL(window.location.href);
+            const params = url.searchParams;
+            
+            // 获取当前排序方向，如果不存在或为desc则设为asc，否则设为desc
+            const currentSort = params.get('sort');
+            const currentDir = params.get('direction');
+            
+            // 切换排序方向
+            let newDir;
+            if (currentSort === 'price' && currentDir === 'asc') {
+                newDir = 'desc';
+            } else {
+                newDir = 'asc';
+            }
+            
+            // 设置排序参数
+            params.set('sort', 'price');
+            params.set('direction', newDir);
+            
+            // 重置页码到第一页
+            params.set('page', '0');
+            
+            // 跳转到排序后的URL
+            window.location.href = url.toString();
+        }
+    </script>
+</body>
+</html> 

@@ -21,6 +21,10 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-mail")
     
+    // 添加Thymeleaf依赖
+    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+    implementation("org.thymeleaf.extras:thymeleaf-extras-java8time")
+    
     // 添加Redis依赖
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("redis.clients:jedis")
@@ -47,5 +51,10 @@ tasks.withType<Test> {
 
 tasks.bootJar {
     archiveFileName.set("lls.jar")
-    mainClass.set("org.example.Main") // 替换为你的主类
+    mainClass.set("org.example.Application") // 设置为Application主类
+}
+
+// 指定bootRun任务使用的主类
+tasks.bootRun {
+    mainClass.set("org.example.Application")
 }
